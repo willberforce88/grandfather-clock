@@ -50,76 +50,85 @@ async function enableAudio() {
 
 function makeWindingSound() {
   const start = audioContext.currentTime;
+  const level = Number($("volume").value) / 100;
   const master = audioContext.createGain();
   const filter = audioContext.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(1250, start);
-  filter.frequency.linearRampToValueAtTime(650, start + 5);
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(1050, start);
+  filter.Q.setValueAtTime(0.8, start);
   master.gain.setValueAtTime(0.0001, start);
-  master.gain.linearRampToValueAtTime(Number($("volume").value) / 100 * 0.10, start + 0.12);
-  master.gain.setValueAtTime(Number($("volume").value) / 100 * 0.10, start + 4.65);
+  master.gain.linearRampToValueAtTime(level * 0.20, start + 0.08);
+  master.gain.setValueAtTime(level * 0.20, start + 4.7);
   master.gain.exponentialRampToValueAtTime(0.0001, start + 5);
   filter.connect(master);
   master.connect(audioContext.destination);
 
-  // A soft, synthetic ratchet/clockwork whirr with little winding clicks.
-  const motor = audioContext.createOscillator();
-  const motorGain = audioContext.createGain();
-  motor.type = "sawtooth";
-  motor.frequency.setValueAtTime(105, start);
-  motor.frequency.linearRampToValueAtTime(185, start + 4.8);
-  motorGain.gain.value = 0.22;
-  motor.connect(motorGain);
-  motorGain.connect(filter);
-  motor.start(start);
-  motor.stop(start + 5.02);
-
-  for (let t = 0; t < 5; t += 0.19) {
-    const click = audioContext.createOscillator();
-    const clickGain = audioContext.createGain();
-    click.type = "square";
-    click.frequency.setValueAtTime(720 + (Math.random() * 100), start + t);
-    clickGain.gain.setValueAtTime(0.0001, start + t);
-    clickGain.gain.exponentialRampToValueAtTime(0.035, start + t + 0.006);
-    clickGain.gain.exponentialRampToValueAtTime(0.0001, start + t + 0.045);
-    click.connect(clickGain);
-    clickGain.connect(filter);
-    click.start(start + t);
-    click.stop(start + t + 0.05);
+  // Fast, mechanical clockwork ticks: a crisp double-click about eight times a second.
+  for (let t = 0; t < 4.92; t += 0.12) {
+    const tickTime = start + t;
+    for (const [offset, hz, gainLevel] of [[0, 1450, 0.10], [0.035, 920, 0.055]]) {
+      const click = audioContext.createOscillator();
+      const clickGain = audioContext.createGain();
+      click.type = "sine";
+      click.frequency.setValueAtTime(hz + Math.random() * 100, tickTime + offset);
+      clickGain.gain.setValueAtTime(0.0001, tickTime + offset);
+      clickGain.gain.exponentialRampToValueAtTime(Math.max(0.0002, level * gainLevel), tickTime + offset + 0.003);
+      clickGain.gain.exponentialRampToValueAtTime(0.0001, tickTime + offset + 0.035);
+      click.connect(clickGain);
+      clickGain.connect(filter);
+      click.start(tickTime + offset);
+      click.stop(tickTime + offset + 0.04);
+    }
   }
 }
 
-function makeBell(start, volume) {
+function makeBell(start, volume, addEcho = false) {
   const now = audioContext.currentTime + start;
   const master = audioContext.createGain();
-  master.connect(audioContext.destination);
+  const dry = audioContext.createGain();
+  master.connect(dry);
+  dry.connect(audioContext.destination);
   master.gain.setValueAtTime(0.0001, now);
-  master.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), now + 0.045);
-  master.gain.setTargetAtTime(0.0001, now + 0.16, 1.85);
+  master.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), now + 0.025);
+  // Keep each strike clean and distinct, with a short natural bronze decay.
+  master.gain.setTargetAtTime(0.0001, now + 0.12, 0.72);
 
-  // Deep, layered bronze-bell tone with a low fundamental and long decay.
+  // Only the final strike is sent through this quiet, short echo path.
+  if (addEcho) {
+    const echoSend = audioContext.createGain();
+    const delay = audioContext.createDelay(1.0);
+    const feedback = audioContext.createGain();
+    echoSend.gain.value = 0.24;
+    delay.delayTime.value = 0.34;
+    feedback.gain.value = 0.22;
+    master.connect(echoSend);
+    echoSend.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(audioContext.destination);
+  }
+
+  // Rounded, low-pitched bell tone without the fizzy high harmonics.
   const partials = [
-    [65.4,0.24,"sine",-2], [130.8,0.95,"sine",0],
-    [262.2,0.38,"sine",1], [392.8,0.23,"sine",-1],
-    [523.4,0.13,"triangle",1], [659.1,0.065,"sine",-2]
+    [65.4, 0.30, "sine"], [130.8, 0.92, "sine"],
+    [196.2, 0.20, "sine"], [261.6, 0.16, "sine"]
   ];
-  for (const [hz,level,type,detune] of partials) {
+  for (const [hz, level, type] of partials) {
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
     osc.type = type;
     osc.frequency.setValueAtTime(hz, now);
-    osc.detune.setValueAtTime(detune, now);
     gain.gain.value = level;
     osc.connect(gain);
     gain.connect(master);
     osc.start(now);
-    osc.stop(now + 6.5);
+    osc.stop(now + 3.2);
   }
 }
 
 function strike(count, label = "hour") {
   const volume = Number($("volume").value) / 100 * 0.38;
-  for (let i = 0; i < count; i++) makeBell(i * 1.48, volume);
+  for (let i = 0; i < count; i++) makeBell(i * 1.48, volume, true);
   $("statusLine").innerHTML = `<span class="status-dot active"></span> ${label === "half-hour" ? "Half-hour chime — one deep strike" : `Striking ${count} ${count === 1 ? "time" : "times"}`}`;
   setTimeout(() => {
     if (chimesEnabled) $("statusLine").innerHTML = '<span class="status-dot active"></span> Hourly and half-hour chimes enabled';
