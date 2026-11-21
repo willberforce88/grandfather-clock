@@ -54,30 +54,31 @@ function makeWindingSound() {
   const master = audioContext.createGain();
   const filter = audioContext.createBiquadFilter();
   filter.type = "bandpass";
-  filter.frequency.setValueAtTime(1050, start);
-  filter.Q.setValueAtTime(0.8, start);
+  filter.frequency.setValueAtTime(1750, start);
+  filter.Q.setValueAtTime(1.15, start);
   master.gain.setValueAtTime(0.0001, start);
-  master.gain.linearRampToValueAtTime(level * 0.20, start + 0.08);
-  master.gain.setValueAtTime(level * 0.20, start + 4.7);
+  master.gain.linearRampToValueAtTime(level * 0.62, start + 0.04);
+  master.gain.setValueAtTime(level * 0.62, start + 4.78);
   master.gain.exponentialRampToValueAtTime(0.0001, start + 5);
   filter.connect(master);
   master.connect(audioContext.destination);
 
-  // Fast, mechanical clockwork ticks: a crisp double-click about eight times a second.
-  for (let t = 0; t < 4.92; t += 0.12) {
+  // Loud, crisp clockwork ticks for the full five seconds, like a mechanism winding up.
+  // A short bright click followed by a lower mechanical tap gives each tick some body.
+  for (let t = 0; t < 4.94; t += 0.155) {
     const tickTime = start + t;
-    for (const [offset, hz, gainLevel] of [[0, 1450, 0.10], [0.035, 920, 0.055]]) {
+    for (const [offset, hz, peak, wave] of [[0, 1850, 0.72, "square"], [0.028, 760, 0.42, "triangle"]]) {
       const click = audioContext.createOscillator();
       const clickGain = audioContext.createGain();
-      click.type = "sine";
-      click.frequency.setValueAtTime(hz + Math.random() * 100, tickTime + offset);
+      click.type = wave;
+      click.frequency.setValueAtTime(hz + Math.random() * 90, tickTime + offset);
       clickGain.gain.setValueAtTime(0.0001, tickTime + offset);
-      clickGain.gain.exponentialRampToValueAtTime(Math.max(0.0002, level * gainLevel), tickTime + offset + 0.003);
-      clickGain.gain.exponentialRampToValueAtTime(0.0001, tickTime + offset + 0.035);
+      clickGain.gain.exponentialRampToValueAtTime(Math.max(0.0002, level * peak), tickTime + offset + 0.002);
+      clickGain.gain.exponentialRampToValueAtTime(0.0001, tickTime + offset + 0.028);
       click.connect(clickGain);
       clickGain.connect(filter);
       click.start(tickTime + offset);
-      click.stop(tickTime + offset + 0.04);
+      click.stop(tickTime + offset + 0.032);
     }
   }
 }
