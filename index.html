@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17100b">
+  <title>The Grandfather Clock</title>
+  <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+  <main class="scene">
+    <header class="heading">
+      <div class="eyebrow">A little piece of tradition</div>
+      <h1>The Grandfather Clock</h1>
+      <p>Keeping time, the old-fashioned way.</p>
+    </header>
+
+    <section class="clock-stage" aria-label="Animated grandfather clock">
+      <div class="clock-case">
+        <div class="top-finial"></div>
+        <div class="hood">
+          <div class="hood-roof"></div>
+          <div class="bell-chamber">
+            <div class="bell bell-left" id="bellLeft"><span class="bell-clapper"></span></div>
+            <div class="bell bell-right" id="bellRight"><span class="bell-clapper"></span></div>
+            <div class="dial">
+              <div class="dial-numerals" id="numerals"></div>
+              <div class="dial-hand hour-hand" id="hourHand"></div>
+              <div class="dial-hand minute-hand" id="minuteHand"></div>
+              <div class="dial-pin"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="waist">
+          <div class="waist-inlay"></div>
+          <div class="digital-time" id="digitalTime">12:00:00 AM</div>
+        </div>
+
+        <div class="trunk">
+          <div class="glass-door">
+            <div class="pendulum-rod"></div>
+            <div class="pendulum-bob"></div>
+            <div class="pendulum-glint"></div>
+          </div>
+          <div class="trunk-carving">✦</div>
+        </div>
+        <div class="base">
+          <div class="base-panel"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="control-strip">
+      <div class="time-readout">
+        <div class="big-time" id="bigTime">12:00:00 AM</div>
+        <div class="date-readout" id="dateReadout">Loading date…</div>
+      </div>
+      <div class="controls">
+        <button class="main-button" id="chimeToggle">Enable hourly chimes</button>
+        <button class="icon-button" id="testChime" title="Test the bell" aria-label="Test the bell">♬</button>
+        <button class="icon-button" id="settingsToggle" title="Settings" aria-label="Settings" aria-expanded="false">⚙</button>
+        <button class="icon-button" id="nightToggle" title="Night mode" aria-label="Night mode" aria-pressed="false">☾</button>
+      </div>
+    </section>
+
+    <aside class="settings-panel" id="settingsPanel" hidden>
+      <div class="settings-heading">
+        <div><span class="eyebrow">Clock controls</span><h2>Settings</h2></div>
+        <button class="close-settings" id="closeSettings" aria-label="Close settings">×</button>
+      </div>
+
+      <label for="timeSource">Time source</label>
+      <select id="timeSource">
+        <option value="system">Computer's system time</option>
+        <option value="manual">Set time manually</option>
+      </select>
+
+      <div id="manualFields" hidden>
+        <label for="manualTime">Choose date and time</label>
+        <input id="manualTime" type="datetime-local">
+        <button class="small-button" id="applyManual">Apply manual time</button>
+        <p class="hint">The clock continues ticking from the time you choose. Your computer's actual time is not changed.</p>
+      </div>
+
+      <label for="volume">Bell volume <span id="volumeLabel">60%</span></label>
+      <input id="volume" type="range" min="0" max="100" value="60">
+
+      <label class="check-row"><input id="quietHours" type="checkbox"> <span>Quiet hours <small>Silence from 10pm to 7am</small></span></label>
+      <label class="check-row"><input id="mute" type="checkbox"> <span>Mute all chimes</span></label>
+      <p class="hint">The clock face uses a 12-hour dial. It strikes 1–12 times, never 13–24.</p>
+      <div class="settings-status" id="settingsStatus">Using system time.</div>
+    </aside>
+
+    <div class="status-line" id="statusLine"><span class="status-dot"></span> Ready when you are</div>
+    <footer>AN OLD SOUL FOR YOUR DESKTOP</footer>
+  </main>
+  <script src="script.js?v=4"></script>
+</body>
+</html>
