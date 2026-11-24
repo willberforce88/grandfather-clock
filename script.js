@@ -33,7 +33,7 @@ function updateClock() {
     if (key !== lastChimeKey) {
       lastChimeKey = key;
       if (!$ ("mute").checked && !isQuiet(date)) {
-        const count = isHourChime ? (h % 12 || 12) : 1;
+        const count = isHourChime ? ((h + 1) % 12 || 12) : 1;
         windUpThenStrike(count, isHourChime ? "hour" : "half-hour");
       }
     }
